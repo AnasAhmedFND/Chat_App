@@ -18,6 +18,26 @@ const Chat_Room = () => {
 
   const messagesRef = collection(db, "messages");
 
+    // ইউজার Login হলে Firestore এ সংরক্ষণ করো
+  const updateUserOnlineStatus = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    await setDoc(userRef, {
+      name: user.displayName,
+      photo: user.photoURL,
+      status: "online",
+      lastActive: serverTimestamp()
+    }, { merge: true });
+  };
+ // চালাও একবার
+  useEffect(() => {
+    updateUserOnlineStatus();
+  }, []);
+
+
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
@@ -41,55 +61,58 @@ const Chat_Room = () => {
         ...doc.data(),
       }));
       setMessages(msgs);
+    })
 
-      // Unique users বের করো
-      const uniqueUsers = [];
-      const seenUids = new Set();
+       return () => unsubscribe();
+  }, []);
 
-      msgs.forEach((msg) => {
-        if (!seenUids.has(msg.uid)) {
-          seenUids.add(msg.uid);
-          uniqueUsers.push({
-            uid: msg.uid,
-            name: msg.displayName,
-            photo: msg.photoURL,
-          });
-        }
-      });
-
-      setChatUsers(uniqueUsers);
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const users = snapshot.docs.map(doc => ({
+        uid: doc.id,
+        ...doc.data()
+      }));
+      setChatUsers(users);
     });
 
     return () => unsubscribe();
   }, []);
 
+
   return (
-    <section className=" w-[600px] mx-auto p-[20px] ">
-      <div className="flex gap-2 p-[20px] items-center bg-linear-60 from-[#dd27dd] to-red-500 shadow-2xl ">
+    <section className=" md:w-[600px]  h-screen mx-auto md:p-[20px] md:px-0 px-2 ">
+      <div className="flex gap-2 md:p-[20px] p-2 items-center bg-linear-60 from-[#dd27dd] to-red-500 shadow-2xl ">
         <img className="w-[50px] h-[50px] rounded-full border-4 border-yellow-500 " src={Me} alt="" />
         <h2 className="font-bold text-2xl text-white">Chat App</h2>
       </div>
 
-      <div className="border " style={{ maxWidth: 600, margin: "auto", }}>
+       {/* sidebar............................................ */}
+          <div className="flex overflow-x-auto md:border border-b-2 md:p-2 ">            
+                
 
-        <div className="flex">
-          {/* sidebar............................................ */}
-          <div className="w-[30%] border-r p-2">
-            <h2 className="font-bold text-xl py-2 border-b-2 mb-2">Chat Users</h2>
             {chatUsers.map((user) => (
-              <div key={user.uid} className="flex items-center gap-3 mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer">
+              <div key={user.uid} className="flex items-center gap-3 mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
                 <img
-                  src={user.photo}
-                  alt={user.name}
-                  className="w-10 h-10 rounded-full border"
+                  src={user.photo}                  
+                  className="w-10 h-10 rounded-full border "
                 />
-                <span className="text-gray-800 font-medium">{user.name}</span>
+              
+
+                  {user.status === "online" && (
+              <p className="absolute w-4 h-4 bg-green-500 border-white border-2 rounded-full bottom-1 right-2 "></p>
+                // <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+              )}
+
+                {/* <span className="text-gray-800 font-medium">{user.name}</span> */}
               </div>
             ))}
           </div>
 
+      <div className="md:border  " style={{ maxWidth: 600, margin: "auto", }}>       
+         
+
           {/* message section ........................................*/}
-          <div className="shadow-2xl w-[70%]  " style={{ height: "400px", overflowY: "auto", border: "1px solid #ccc", padding: 10 }}>
+          <div className="shadow-2xl h-[400px] " style={{ overflowY: "auto", border: "1px solid #ccc", padding: 10 }}>
             {messages.map((msg) => (
               <div className="border bg-[#78a7bdfa] flex gap-4"
                 key={msg.id}
@@ -111,13 +134,13 @@ const Chat_Room = () => {
 
                 <div className="">
                   <strong>{msg.displayName}</strong>
-                  <p style={{ margin: 0 }}>{msg.text}</p>
+                  <p className="break-words max-w-[190px]  ">{msg.text}</p>
                 </div>
               </div>
             ))}
           </div>
 
-        </div>
+        
 
         <form onSubmit={sendMessage} className="flex mt-4">
           <input className="border rounded-xl "
