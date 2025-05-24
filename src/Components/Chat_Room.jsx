@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from "react";
 import Me from './img/portfolio.jpg'
 import { auth, db } from "../firebase";
+import { TiDelete } from "react-icons/ti";
+import { deleteDoc, doc } from "firebase/firestore";
+
 import {
   collection,
   addDoc,
@@ -18,7 +21,7 @@ const Chat_Room = () => {
 
   const messagesRef = collection(db, "messages");
 
-    // ইউজার Login হলে Firestore এ সংরক্ষণ করো
+  // ইউজার Login হলে Firestore এ সংরক্ষণ করো
   const updateUserOnlineStatus = async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -31,7 +34,7 @@ const Chat_Room = () => {
       lastActive: serverTimestamp()
     }, { merge: true });
   };
- // চালাও একবার
+  // চালাও একবার
   useEffect(() => {
     updateUserOnlineStatus();
   }, []);
@@ -63,7 +66,7 @@ const Chat_Room = () => {
       setMessages(msgs);
     })
 
-       return () => unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -78,6 +81,18 @@ const Chat_Room = () => {
     return () => unsubscribe();
   }, []);
 
+  // Delete message............................................
+  const handleDelete = async (id) => {
+  const confirm = window.confirm("Are you sure you want to delete this message?");
+  if (!confirm) return;
+
+  try {
+    await deleteDoc(doc(db, "messages", id));
+  } catch (error) {
+    console.error("Error deleting message:", error);
+  }
+};
+
 
   return (
     <section className=" md:w-[600px]  h-screen mx-auto md:p-[20px] md:px-0 px-2 ">
@@ -86,61 +101,66 @@ const Chat_Room = () => {
         <h2 className="font-bold text-2xl text-white">Chat App</h2>
       </div>
 
-       {/* sidebar............................................ */}
-          <div className="flex overflow-x-auto md:border border-b-2 md:p-2 ">            
-                
+      {/* sidebar............................................ */}
+      <div className="flex overflow-x-auto md:border border-b-2 md:p-2 ">
 
-            {chatUsers.map((user) => (
-              <div key={user.uid} className="flex items-center gap-3 mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
-                <img
-                  src={user.photo}                  
-                  className="w-10 h-10 rounded-full border "
-                />
-              
 
-                  {user.status === "online" && (
+        {chatUsers.map((user) => (
+          <div key={user.uid} className="flex items-center gap-3 mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
+            <img
+              src={user.photo}
+              className="w-10 h-10 rounded-full border "
+            />
+
+
+            {user.status === "online" && (
               <p className="absolute w-4 h-4 bg-green-500 border-white border-2 rounded-full bottom-1 right-2 "></p>
-                // <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+              // <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+            )}
+
+            {/* <span className="text-gray-800 font-medium">{user.name}</span> */}
+          </div>
+        ))}
+      </div>
+
+      <div className="md:border  " style={{ maxWidth: 600, margin: "auto", }}>
+
+
+        {/* message section ........................................*/}
+        <div className="shadow-2xl h-[400px] " style={{ overflowY: "auto", border: "1px solid #ccc", padding: 10 }}>
+          {messages.map((msg) => (
+            <div className="border bg-[#78a7bdfa] flex gap-4 relative "
+              key={msg.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 10,
+                backgroundColor: msg.uid === auth.currentUser.uid ? "#78a7bdfa" : "#f5f",
+                padding: "5px 10px",
+                borderRadius: 10,
+                maxWidth: "80%",
+                marginLeft: msg.uid === auth.currentUser.uid ? "auto" : 0,
+              }}
+             >
+              <img className="border-white flex items-center justify-center w-[40px] h-[40px] rounded-full   "
+                src={msg.photoURL}
+
+              />
+
+              <div className="">
+                <strong>{msg.displayName}</strong>
+                <p className="break-words max-w-[190px]  ">{msg.text}</p>
+              </div>
+              {msg.uid === auth.currentUser.uid && (
+                <button onClick={() => handleDelete(msg.id)} className=" text-2xl  absolute top-0 right-0 cursor-pointer "><TiDelete /></button>
+
               )}
 
-                {/* <span className="text-gray-800 font-medium">{user.name}</span> */}
-              </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
 
-      <div className="md:border  " style={{ maxWidth: 600, margin: "auto", }}>       
-         
 
-          {/* message section ........................................*/}
-          <div className="shadow-2xl h-[400px] " style={{ overflowY: "auto", border: "1px solid #ccc", padding: 10 }}>
-            {messages.map((msg) => (
-              <div className="border bg-[#78a7bdfa] flex gap-4"
-                key={msg.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: 10,
-                  backgroundColor: msg.uid === auth.currentUser.uid ? "#78a7bdfa" : "#f5f",
-                  padding: "5px 10px",
-                  borderRadius: 10,
-                  maxWidth: "80%",
-                  marginLeft: msg.uid === auth.currentUser.uid ? "auto" : 0,
-                }}
-              >
-                <img className="border-white flex items-center justify-center w-[40px] h-[40px] rounded-full   "
-                  src={msg.photoURL}
-
-                />
-
-                <div className="">
-                  <strong>{msg.displayName}</strong>
-                  <p className="break-words max-w-[190px]  ">{msg.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        
 
         <form onSubmit={sendMessage} className="flex mt-4">
           <input className="border rounded-xl "
