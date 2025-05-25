@@ -4,6 +4,7 @@ import Me from './img/portfolio.jpg'
 import { auth, db } from "../firebase";
 import { TiDelete } from "react-icons/ti";
 import { deleteDoc, doc } from "firebase/firestore";
+import { setDoc } from "firebase/firestore";
 
 import {
   collection,
@@ -13,6 +14,8 @@ import {
   query,
   orderBy
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth"; 
+
 
 const Chat_Room = () => {
   const [message, setMessage] = useState("");
@@ -34,10 +37,24 @@ const Chat_Room = () => {
       lastActive: serverTimestamp()
     }, { merge: true });
   };
-  // চালাও একবার
+    //  ইউজার লগইন হলে স্ট্যাটাস সেট করা হচ্ছে
   useEffect(() => {
-    updateUserOnlineStatus();
-  }, []);
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      await updateUserOnlineStatus();
+    } else {
+      // ইউজার লগআউট করলে স্ট্যাটাস offline
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(userRef, { status: "offline" }, { merge: true });
+      }
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
+
 
 
 
