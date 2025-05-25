@@ -123,7 +123,7 @@ const Chat_Room = () => {
 
 
         {chatUsers.map((user) => (
-          <div key={user.uid} className="  mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
+          <div key={user.uid} className=" overflow-x-auto  mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
             <img
               src={user.photo}
               className="w-10 h-10 rounded-full border "
@@ -144,7 +144,7 @@ const Chat_Room = () => {
 
 
         {/* message section ........................................*/}
-        <div className="shadow-2xl h-[400px] " style={{ overflowY: "auto", border: "1px solid #ccc", padding: 10 }}>
+        <div className="shadow-2xl h-[450px] " style={{ overflowY: "auto", border: "1px solid #ccc", padding: 10 }}>
           {messages.map((msg) => (
             <div className="border bg-[#78a7bdfa] flex gap-4 relative "
               key={msg.id}
