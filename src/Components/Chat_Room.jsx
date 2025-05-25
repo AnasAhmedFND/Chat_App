@@ -123,7 +123,7 @@ const Chat_Room = () => {
 
 
         {chatUsers.map((user) => (
-          <div key={user.uid} className="flex items-center gap-3 mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
+          <div key={user.uid} className="  mb-3 p-2 hover:bg-gray-200 rounded cursor-pointer relative">
             <img
               src={user.photo}
               className="w-10 h-10 rounded-full border "
@@ -131,11 +131,11 @@ const Chat_Room = () => {
 
 
             {user.status === "online" && (
-              <p className="absolute w-4 h-4 bg-green-500 border-white border-2 rounded-full bottom-1 right-2 "></p>
+              <p className="absolute w-4 h-4 bg-green-500 border-white border-2 rounded-full bottom-0 top-0 "></p>
               // <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
             )}
 
-            {/* <span className="text-gray-800 font-medium">{user.name}</span> */}
+            <span className="text-gray-800 font-medium">{user.name}</span>
           </div>
         ))}
       </div>
